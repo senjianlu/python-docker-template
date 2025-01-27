@@ -1,0 +1,36 @@
+# 将项目构建镜像并推送至腾讯云容器镜像服务
+name: Build and push Docker image to Tencent Cloud Container Registry
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        # 存在子模块时需要添加以下参数
+        # with:
+        #   submodules: 'true'
+        #   token: ${{ secrets.READONLY_TOKEN_FOR_GITHUB_ACTION }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          # 腾讯云容器镜像服务
+          registry: ccr.ccs.tencentyun.com/namespace/python-docker-template
+          username: ${{ secrets.TENCENT_CCR_USERNAME }}
+          password: ${{ secrets.TENCENT_CCR_PASSWORD }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          # 腾讯云容器镜像服务
+          tags: ccr.ccs.tencentyun.com/namespace/python-docker-template:${{ github.sha }} , ccr.ccs.tencentyun.com/namespace/python-docker-template:latest
